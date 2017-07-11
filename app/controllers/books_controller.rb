@@ -10,10 +10,12 @@ class BooksController < ApiController
   # post /books
   def create
     @book = Book.new(book_params)
+    @book.author_list = author_params
     if @book.save
-      @book.save_associations(author_params, genre_params)
+      response = { :book => @book }.to_json(:include => [:authors, :genres])
+    else
+      response = { } # TODO
     end
-    response = { :book => @book }.to_json(:include => [:authors, :genres])
     json_response(response)
   end
 
