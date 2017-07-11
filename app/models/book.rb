@@ -3,13 +3,14 @@ require 'google_books'
 class Book < ActiveRecord::Base
   before_save :set_google_book
   before_save :validate_author
+  before_save :set_api_details
   before_create :validate_isbn
 
   has_many :author_books
   has_many :authors, through: :author_books
   has_many :book_genres
   has_many :genres, through: :book_genres
-  has_one :location
+  belongs_to :location
 
   accepts_nested_attributes_for :authors
   accepts_nested_attributes_for :genres
@@ -25,6 +26,12 @@ class Book < ActiveRecord::Base
   def validate_author
     return true if author_list.empty?
     check_authors
+  end
+
+  def set_api_details
+    self.pages = @google_book.page_count
+    self.description = @google_book.description
+    add_genres
   end
 
   private
@@ -53,9 +60,10 @@ class Book < ActiveRecord::Base
     end
   end
 
-  def add_genres(genre_params)
-    genre_params[:genres].each do |hash|
-      genre = Genre.find_or_create_by(name: hash[:name])
+  def add_genres
+    genres = @google_book.categories
+    genres.each do |g|
+      genre = Genre.find_or_create_by(name: g)
       self.genres << genre
     end
   end
