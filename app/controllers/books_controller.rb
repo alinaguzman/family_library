@@ -1,3 +1,4 @@
+
 class BooksController < ApiController
   before_action :set_book, only: [:show, :update, :destroy]
 
@@ -9,11 +10,16 @@ class BooksController < ApiController
 
   # post /books
   def create
-    @book = Book.new(book_params)
-    @book.author_list = author_params
-    if @book.save
-      response = { :book => @book }.to_json(:include => [:authors, :genres])
+    builder = BookBuilder.new
+    builder.set_title(book_params[:title])
+    builder.add_authors(authors_params)
+    builder.add_location(book_params[:location])
+    book = builder.book
+    if book.save
+      response = { :book => book }.to_json(:include => [:authors, :genres])
     else
+      puts book.errors.messages.inspect
+      # validation or callback error of some sort
       response = { } # TODO
     end
     json_response(response)
@@ -38,15 +44,11 @@ class BooksController < ApiController
   private
 
   def book_params
-    params.require(:book).permit(:title)
+    params.require(:book).permit(:title, :location)
   end
 
-  def author_params
+  def authors_params
     params.require(:book).permit({ authors: [:first_name, :last_name]})
-  end
-
-  def genre_params
-    params.require(:book).permit({ genres: [:name]})
   end
 
   def set_book

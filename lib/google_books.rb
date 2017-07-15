@@ -30,4 +30,8 @@ class GoogleBooks
   def page_count
     @response[0]['volumeInfo']['pageCount']
   end
+
+  def thumbnail
+    @response[0]['volumeInfo']['imageLinks']['thumbnail']
+  end
 end
