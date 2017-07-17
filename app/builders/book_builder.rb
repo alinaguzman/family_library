@@ -3,6 +3,12 @@ require 'google_books'
 class BookBuilder
   attr_reader :book
 
+  def self.build
+    builder = new
+    yield(builder)
+    builder.book
+  end
+
   def initialize
     @book = Book.new
   end
@@ -24,7 +30,8 @@ class BookBuilder
   def add_authors(authors_params)
     check_authors(authors_params)
     authors_params['authors'].each do |hash|
-      a = Author.find_or_create_by(first_name: hash[:first_name], last_name: hash[:last_name])
+      a = Author.find_or_create_by(first_name: hash[:first_name],
+                                   last_name: hash[:last_name])
       @book.authors << a
     end
   end
@@ -33,7 +40,8 @@ class BookBuilder
     return unless authors_hash.keys.include? 'authors'
     lower_case = @google_book.authors.map{ |a| a.downcase }
     authors_hash['authors'].each do |hash|
-      if lower_case.include? [hash['first_name'].downcase, hash['last_name'].downcase].join(' ')
+      if lower_case.include? [hash['first_name'].downcase,
+                              hash['last_name'].downcase].join(' ')
         return true
       end
     end

@@ -10,18 +10,16 @@ class BooksController < ApiController
 
   # post /books
   def create
-    builder = BookBuilder.new
-    builder.set_title(book_params[:title])
-    builder.add_authors(authors_params)
-    builder.add_location(book_params[:location])
-    book = builder.book
-    if book.save
-      response = { :book => book }.to_json(:include => [:authors, :genres])
-    else
-      puts book.errors.messages.inspect
-      # validation or callback error of some sort
-      response = { } # TODO
+    book = BookBuilder.build do |builder|
+      builder.set_title(book_params[:title])
+      builder.add_authors(authors_params)
+      builder.add_location(book_params[:location])
     end
+    unless book.save
+      book = Book.where({ title: book_params[:title] }).first
+      # puts book.errors.messages.inspect
+    end
+    response = { :book => book }.to_json(:include => [:authors, :genres])
     json_response(response)
   end
 
